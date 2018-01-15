@@ -153,7 +153,8 @@ if (!module.parent) {
  * @param {function} callback
  */
 function generate(files, options, callback) {
-  files = Array.isArray(files) ? files : glob.sync(files);
+  files = Array.isArray(files) ? files : [files];
+  files = files.reduce((acc, value) => acc.concat(glob.sync(value)), []);
   if (files.length == 0) return callback(new Error('no files specified'));
 
   options = options || {};
@@ -198,20 +199,26 @@ function generate(files, options, callback) {
 
   if (!fs.existsSync(options.path) && options.path !== '') fs.mkdirSync(options.path);
 
+  console.log('Starting spritesheet-js:');
   async.waterfall([
     function (callback) {
+      console.log('- Trimming images ...');
       generator.trimImages(files, options, callback);
     },
     function (callback) {
+      console.log('- Getting image sizes ...');
       generator.getImagesSizes(files, options, callback);
     },
     function (files, callback) {
+      console.log('- Determine canvas size ...');
       generator.determineCanvasSize(files, options, callback);
     },
     function (options, callback) {
+      console.log('- Generating final image ...');
       generator.generateImage(files, options, callback);
     },
     function (callback) {
+      console.log('- Generating data ...');
       generator.generateData(files, options, callback);
     }
   ],
